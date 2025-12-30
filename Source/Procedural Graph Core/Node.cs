@@ -47,7 +47,7 @@ public abstract class Node
     /// </returns>
     public abstract IGenerator CreateGenerator();
 
-    protected void ParametersHaveChanged()
+    protected virtual void ParametersHaveChanged()
     {
         ParametersChanged?.Invoke(this);
     }

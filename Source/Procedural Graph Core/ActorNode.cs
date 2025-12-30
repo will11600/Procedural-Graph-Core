@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FlaxEditor;
 using FlaxEngine;
 
 namespace ProceduralGraph;
@@ -59,6 +60,17 @@ public abstract class ActorNode : Node, IEquatable<ActorNode>
     {
         base.OnStopping();
         Scripting.LateUpdate -= OnUpdate;
+    }
+
+    /// <inheritdoc/>
+    protected override void ParametersHaveChanged()
+    {
+        if (Actor != null)
+        {
+            Editor.Instance.Scene.MarkSceneEdited(Actor.Scene);
+        }
+
+        base.ParametersHaveChanged();
     }
 
     protected virtual void OnUpdate()
