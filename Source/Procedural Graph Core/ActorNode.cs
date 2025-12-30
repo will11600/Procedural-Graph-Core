@@ -5,7 +5,7 @@ using FlaxEngine;
 namespace ProceduralGraph;
 
 /// <summary>
-/// ActorNode class.
+/// Represents an abstract base class for nodes that are associated with a specific actor in the scene.
 /// </summary>
 public abstract class ActorNode : Node, IEquatable<ActorNode>
 {
@@ -27,6 +27,12 @@ public abstract class ActorNode : Node, IEquatable<ActorNode>
     }
     
     private Actor? _actor;
+    /// <summary>
+    /// Gets or sets the actor associated with this node.
+    /// </summary>
+    /// <value>
+    /// The <see cref="FlaxEngine.Actor"/> instance linked to this node, or <see langword="null"/> if no actor is assigned.
+    /// </value>
     [NoSerialize, HideInEditor]
     public Actor? Actor
     {
@@ -40,11 +46,15 @@ public abstract class ActorNode : Node, IEquatable<ActorNode>
 
     private int _hashCode;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ActorNode"/> class.
+    /// </summary>
     public ActorNode() : base()
     {
         Scripting.LateUpdate += OnUpdate;
     }
 
+    /// <inheritdoc/>
     public override void OnStopping()
     {
         base.OnStopping();
@@ -67,16 +77,19 @@ public abstract class ActorNode : Node, IEquatable<ActorNode>
         }
     }
 
+    /// <inheritdoc/>
     public bool Equals(ActorNode? other)
     {
         return EqualityComparer<Actor>.Default.Equals(Actor, other?.Actor);
     }
 
+    /// <inheritdoc/>
     public override bool Equals(object? obj)
     {
         return Equals(obj as ActorNode);
     }
 
+    /// <inheritdoc/>
     public override int GetHashCode()
     {
         return Actor == null ? base.GetHashCode() : HashCode.Combine(Actor, Actor.Transform);
