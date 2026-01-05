@@ -168,7 +168,7 @@ internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphEntity>, 
         }
 
         Dictionary<Guid, List<GraphComponent>> nodes = [];
-        foreach (EntityComponent GraphModel in proceduralGraph.Nodes)
+        foreach (EntityComponent GraphModel in proceduralGraph.Components)
         {
             ref List<GraphComponent>? models = ref CollectionsMarshal.GetValueRefOrAddDefault(nodes, GraphModel.ActorID, out bool exists);
 

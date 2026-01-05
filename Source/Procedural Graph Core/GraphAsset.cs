@@ -4,15 +4,15 @@ namespace ProceduralGraph;
 
 internal sealed class GraphAsset
 {
-    public EntityComponent[] Nodes { get; set; }
+    public EntityComponent[] Components { get; set; }
 
     public GraphAsset()
     {
-        Nodes = [];
+        Components = [];
     }
 
-    public GraphAsset(IEnumerable<EntityComponent> nodeModels)
+    public GraphAsset(IEnumerable<EntityComponent> entityComponents)
     {
-        Nodes = [.. nodeModels];
+        Components = [.. entityComponents];
     }
 }
