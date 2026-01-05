@@ -23,7 +23,7 @@ public sealed class GraphLifecycleManager : EditorPlugin
 
     private readonly List<IGraphConverter> _converters = [];
     /// <summary>
-    /// Gets a collection of graph converters which facilitate the transformation of Flax Actors into processing Nodes.
+    /// Gets a collection of graph converters which facilitate the transformation of Flax Actors into entities.
     /// </summary>
     public ICollection<IGraphConverter> Converters => _converters;
 
@@ -95,14 +95,14 @@ public sealed class GraphLifecycleManager : EditorPlugin
         }
     }
 
-    internal bool TryFindNode(Actor? actor, [NotNullWhen(true)] out IGraphNode? node)
+    internal bool TryFindEntity(Actor? actor, [NotNullWhen(true)] out IGraphEntity? entity)
     {
         if (actor != null && _graphs.TryGetValue(actor.Scene, out GraphInstance? graph))
         {
-            return graph.TryGetValue(actor, out node);
+            return graph.TryGetValue(actor, out entity);
         }
 
-        node = default;
+        entity = default;
         return false;
     }
 
@@ -120,14 +120,14 @@ public sealed class GraphLifecycleManager : EditorPlugin
 
     private async void OnActorDeleted(Actor actor)
     {
-        if (!_graphs.TryGetValue(actor.Scene, out GraphInstance? graph) || !graph.Remove(actor, out IGraphNode? node))
+        if (!_graphs.TryGetValue(actor.Scene, out GraphInstance? graph) || !graph.Remove(actor, out IGraphEntity? entity))
         {
             return;
         }
 
         try
         {
-            await node.StopAsync(_stoppingCts!.Token);
+            await entity.StopAsync(_stoppingCts!.Token);
         }
         catch (Exception ex)
         {
@@ -135,7 +135,7 @@ public sealed class GraphLifecycleManager : EditorPlugin
         }
         finally
         {
-            node.Dispose();
+            entity.Dispose();
         }
     }
 

@@ -12,12 +12,12 @@ using FlaxEngine;
 namespace ProceduralGraph;
 
 /// <summary>
-/// A default implementation of a graph node that handles asynchronous generation, property change debouncing, and thread safety.
+/// A default implementation of a graph entity that handles asynchronous generation, property change debouncing, and thread safety.
 /// </summary>
 /// <typeparam name="T">The type of generator to use.</typeparam>
-public class GraphNode<T> : IGraphNode where T : IGenerator<T>
+public class GraphEntity<T> : IGraphEntity where T : IGenerator<T>
 {
-    private static readonly ScriptType _collectionType = new(typeof(ObservableCollection<GraphModel>));
+    private static readonly ScriptType _collectionType = new(typeof(ObservableCollection<GraphComponent>));
 
     /// <summary>
     /// The time to wait after a property change before triggering a rebuild, used to prevent excessive re-computation.
@@ -35,22 +35,22 @@ public class GraphNode<T> : IGraphNode where T : IGenerator<T>
     protected readonly SemaphoreSlim semaphore;
 
     /// <summary>
-    /// The source for cancelling background generation tasks when the node is disposed or stopped.
+    /// The source for cancelling background generation tasks when the entity is disposed or stopped.
     /// </summary>
     protected readonly CancellationTokenSource stoppingCts;
     /// <inheritdoc/>
     public CancellationToken StoppingToken => stoppingCts.Token;
 
     /// <summary>
-    /// Gets a value indicating whether this node has been disposed.
+    /// Gets a value indicating whether this entity has been disposed.
     /// </summary>
     protected bool IsDisposed { get; private set; }
 
-    private readonly ObservableCollection<GraphModel> _models;
+    private readonly ObservableCollection<GraphComponent> _components;
     /// <summary>
-    /// Gets the parameters associated with this node.
+    /// Gets the parameters associated with this entity.
     /// </summary>
-    public ICollection<GraphModel> Models => _models;
+    public ICollection<GraphComponent> Components => _components;
 
     /// <inheritdoc/>
     public Actor Actor { get; }
@@ -59,17 +59,17 @@ public class GraphNode<T> : IGraphNode where T : IGenerator<T>
     public CustomValueContainer ValueContainer { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="GraphNode{T}"/> class.
+    /// Initializes a new instance of the <see cref="GraphEntity{T}"/> class.
     /// </summary>
-    /// <param name="actor">The Actor associated with this node.</param>
+    /// <param name="actor">The Actor associated with this entity.</param>
     /// <param name="cancellationToken">A token to observe for external cancellation.</param>
-    /// <param name="models">The data models for this node.</param>
+    /// <param name="models">The data models for this entity.</param>
     /// <param name="debounceSeconds">The delay in seconds to wait for changes to settle before rebuilding.</param>
-    public GraphNode(Actor actor, IEnumerable<GraphModel> models, CancellationToken cancellationToken, double debounceSeconds = 0.2)
+    public GraphEntity(Actor actor, IEnumerable<GraphComponent> models, CancellationToken cancellationToken, double debounceSeconds = 0.2)
     {
-        _models = [.. models];
-        _models.CollectionChanged += OnCollectionChanged;
-        _models.ItemPropertyChanged += OnPropertyChanged;
+        _components = [.. models];
+        _components.CollectionChanged += OnCollectionChanged;
+        _components.ItemPropertyChanged += OnPropertyChanged;
 
         Actor = actor;
         semaphore = new(1, 1);
@@ -82,14 +82,14 @@ public class GraphNode<T> : IGraphNode where T : IGenerator<T>
             Display = CollectionAttribute.DisplayType.Header
         };
 
-        ValueContainer = new(_collectionType, (instance, index) => _models, attributes: [collectionAttribute])
+        ValueContainer = new(_collectionType, (instance, index) => _components, attributes: [collectionAttribute])
         {
-            _models
+            _components
         };
     }
 
     /// <summary>
-    /// Handles property change events from the <see cref="Models"/> collection.
+    /// Handles property change events from the <see cref="Components"/> collection.
     /// </summary>
     protected virtual void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
@@ -97,7 +97,7 @@ public class GraphNode<T> : IGraphNode where T : IGenerator<T>
     }
 
     /// <summary>
-    /// Handles property change events from the items inside the <see cref="Models"/> collection.
+    /// Handles property change events from the items inside the <see cref="Components"/> collection.
     /// </summary>
     protected virtual void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -105,7 +105,7 @@ public class GraphNode<T> : IGraphNode where T : IGenerator<T>
     }
 
     /// <summary>
-    /// Marks the node as dirty and attempts to start the generation loop.
+    /// Marks the entity as dirty and attempts to start the generation loop.
     /// </summary>
     public void MarkAsDirty()
     {
@@ -119,7 +119,7 @@ public class GraphNode<T> : IGraphNode where T : IGenerator<T>
 
     /// <summary>
     /// The core execution loop. Uses a <see cref="PeriodicTimer"/> to wait for the debounce period 
-    /// and then executes the generator if the node is still dirty.
+    /// and then executes the generator if the entity is still dirty.
     /// </summary>
     protected virtual async void StartGenerating()
     {
@@ -131,7 +131,7 @@ public class GraphNode<T> : IGraphNode where T : IGenerator<T>
             {
                 if (!isDirty)
                 {
-                    generator = T.Create(Actor, _models);
+                    generator = T.Create(Actor, _components);
                     await generator.BuildAsync(stoppingCts.Token);
                 }
             }
@@ -173,12 +173,12 @@ public class GraphNode<T> : IGraphNode where T : IGenerator<T>
     /// </summary>
     protected virtual void OnStopping()
     {
-        _models.CollectionChanged -= OnCollectionChanged;
-        _models.ItemPropertyChanged -= OnPropertyChanged;
+        _components.CollectionChanged -= OnCollectionChanged;
+        _components.ItemPropertyChanged -= OnPropertyChanged;
     }
 
     /// <summary>
-    /// Disposes resources used by the node.
+    /// Disposes resources used by the entity.
     /// </summary>
     protected virtual void OnDisposing()
     {

@@ -4,23 +4,23 @@ using System;
 
 namespace ProceduralGraph;
 
-internal sealed class NodeModel
+internal sealed class EntityComponent
 {
     [Serialize, ShowInEditor]
     public Guid ActorID { get; set; }
 
     [Serialize, ShowInEditor, JsonProperty(ItemTypeNameHandling = TypeNameHandling.Auto)]
-    public GraphModel Model { get; set; }
+    public GraphComponent Component { get; set; }
 
-    public NodeModel(Guid actorID, GraphModel model)
+    public EntityComponent(Guid actorID, GraphComponent model)
     {
         ActorID = actorID;
-        Model = model;
+        Component = model;
     }
 
-    public NodeModel()
+    public EntityComponent()
     {
         ActorID = Guid.Empty;
-        Model = default!;
+        Component = default!;
     }
 }

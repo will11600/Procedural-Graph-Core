@@ -23,5 +23,5 @@ public interface IGenerator<TSelf> where TSelf : IGenerator<TSelf>
     /// <param name="actor">The actor.</param>
     /// <param name="models">The current configuration data.</param>
     /// <returns>The constructed <typeparamref name="TSelf"/> instance.</returns>
-    static abstract TSelf Create(Actor actor, IEnumerable<GraphModel> models);
+    static abstract TSelf Create(Actor actor, IEnumerable<GraphComponent> models);
 }

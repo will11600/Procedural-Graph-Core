@@ -10,20 +10,20 @@ namespace ProceduralGraph;
 /// <summary>
 /// Represents a processing unit within the procedural graph.
 /// </summary>
-public interface IGraphNode : IDisposable
+public interface IGraphEntity : IDisposable
 {
     /// <summary>
-    /// Gets a cancellation token that is triggered when the node is stopping or disposing.
+    /// Gets a cancellation token that is triggered when the entity is stopping or disposing.
     /// </summary>
     CancellationToken StoppingToken { get; }
 
     /// <summary>
-    /// Gets the configuration parameters for this node.
+    /// Gets the configuration parameters for this entity.
     /// </summary>
-    ICollection<GraphModel> Models { get; }
+    ICollection<GraphComponent> Components { get; }
 
     /// <summary>
-    /// Gets or the Actor associated with this node.
+    /// Gets or the Actor associated with this entity.
     /// </summary>
     Actor Actor { get; }
 
@@ -33,7 +33,7 @@ public interface IGraphNode : IDisposable
     CustomValueContainer ValueContainer { get; }
 
     /// <summary>
-    /// Requests that the node stop any background processing immediately.
+    /// Requests that the entity stop any background processing immediately.
     /// </summary>
     /// <param name="cancellationToken">Token to monitor for the stopping process itself.</param>
     /// <returns>A task representing the shutdown operation.</returns>

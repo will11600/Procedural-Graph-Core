@@ -5,22 +5,22 @@ using FlaxEngine;
 namespace ProceduralGraph;
 
 /// <summary>
-///  An extension of <seealso cref="GraphNode{T}"/> that can handle dynamic updates.
+///  An extension of <seealso cref="GraphEntity{T}"/> that can handle dynamic updates.
 /// </summary>
 /// <typeparam name="T">The type of generator to use.</typeparam>
-public class RealtimeGraphNode<T> : GraphNode<T> where T : IGenerator<T>
+public class RealtimeGraphentity<T> : GraphEntity<T> where T : IGenerator<T>
 {
     private int _transformHashCode;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RealtimeGraphNode{T}"/> class.
+    /// Initializes a new instance of the <see cref="RealtimeGraphentity{T}"/> class.
     /// </summary>
-    /// <param name="actor">The Actor associated with this node.</param>
+    /// <param name="actor">The Actor associated with this entity.</param>
     /// <param name="cancellationToken">A token to observe for external cancellation.</param>
-    /// <param name="models">The data models for this node.</param>
+    /// <param name="components">The data models for this entity.</param>
     /// <param name="debounceSeconds">The delay in seconds to wait for changes to settle before rebuilding.</param>
-    public RealtimeGraphNode(Actor actor, IEnumerable<GraphModel> models, CancellationToken cancellationToken, double debounceSeconds = 0.2) : 
-        base(actor, models, cancellationToken, debounceSeconds)
+    public RealtimeGraphentity(Actor actor, IEnumerable<GraphComponent> components, CancellationToken cancellationToken, double debounceSeconds = 0.2) : 
+        base(actor, components, cancellationToken, debounceSeconds)
     {
         _transformHashCode = actor.Transform.GetHashCode();
         Scripting.Update += OnUpdate;

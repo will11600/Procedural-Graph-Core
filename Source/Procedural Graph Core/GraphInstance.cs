@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace ProceduralGraph;
 
-internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphNode>, IDisposable
+internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphEntity>, IDisposable
 {
     public string AssetPath { get; }
 
@@ -22,14 +22,14 @@ internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphNode>, ID
 
     public IEnumerable<Actor> Keys => _nodes.Keys;
 
-    public IEnumerable<IGraphNode> Values => _nodes.Values;
+    public IEnumerable<IGraphEntity> Values => _nodes.Values;
 
-    public IGraphNode this[Actor key] => _nodes[key];
+    public IGraphEntity this[Actor key] => _nodes[key];
 
     public GraphLifecycleManager LifecycleManager { get; }
 
-    private readonly Dictionary<Actor, IGraphNode> _nodes;
-    private readonly Dictionary<Guid, List<GraphModel>> _models;
+    private readonly Dictionary<Actor, IGraphEntity> _nodes;
+    private readonly Dictionary<Guid, List<GraphComponent>> _models;
     private bool _disposed;
 
     public GraphInstance(Scene scene, GraphLifecycleManager lifecycleManager)
@@ -55,13 +55,13 @@ internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphNode>, ID
         return _nodes.ContainsKey(key);
     }
 
-    public bool TryGetValue(Actor key, [MaybeNullWhen(false)] out IGraphNode value)
+    public bool TryGetValue(Actor key, [MaybeNullWhen(false)] out IGraphEntity value)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         return _nodes.TryGetValue(key, out value);
     }
 
-    public IEnumerator<KeyValuePair<Actor, IGraphNode>> GetEnumerator()
+    public IEnumerator<KeyValuePair<Actor, IGraphEntity>> GetEnumerator()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         return _nodes.GetEnumerator();
@@ -70,7 +70,7 @@ internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphNode>, ID
     public bool Add(Actor key)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        ref IGraphNode? node = ref CollectionsMarshal.GetValueRefOrAddDefault(_nodes, key, out bool exists);
+        ref IGraphEntity? node = ref CollectionsMarshal.GetValueRefOrAddDefault(_nodes, key, out bool exists);
         if (!exists && TryGetConverter(key, out IGraphConverter? converter))
         {
             node = Convert(key, converter);
@@ -79,7 +79,7 @@ internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphNode>, ID
         return false;
     }
 
-    public bool Remove(Actor key, [NotNullWhen(true)] out IGraphNode? value)
+    public bool Remove(Actor key, [NotNullWhen(true)] out IGraphEntity? value)
     {
         return _nodes.Remove(key, out value); 
     }
@@ -88,7 +88,7 @@ internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphNode>, ID
     {
         List<Task> stoppings = new(_nodes.Count);
 
-        foreach (IGraphNode node in _nodes.Values)
+        foreach (IGraphEntity node in _nodes.Values)
         {
             Task stopping = node.StopAsync(cancellationToken);
             stoppings.Add(stopping);
@@ -101,7 +101,7 @@ internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphNode>, ID
     {
         if (TryGetConverter(parent, out IGraphConverter? converter))
         {
-            IGraphNode node = Convert(parent, converter);
+            IGraphEntity node = Convert(parent, converter);
             _nodes.Add(parent, node);
         }
 
@@ -111,9 +111,9 @@ internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphNode>, ID
         }
     }
 
-    private IGraphNode Convert(Actor actor, IGraphConverter converter)
+    private IGraphEntity Convert(Actor actor, IGraphConverter converter)
     {
-        if (_models.Remove(actor.ID, out List<GraphModel>? models))
+        if (_models.Remove(actor.ID, out List<GraphComponent>? models))
         {
             return converter.Convert(actor, models, LifecycleManager.StoppingToken);
         }
@@ -145,7 +145,7 @@ internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphNode>, ID
 
         if (disposing)
         {
-            foreach (IGraphNode node in _nodes.Values)
+            foreach (IGraphEntity node in _nodes.Values)
             {
                 node.Dispose();
             }
@@ -160,36 +160,36 @@ internal sealed class GraphInstance : IReadOnlyDictionary<Actor, IGraphNode>, ID
         GC.SuppressFinalize(this);
     }
 
-    private static Dictionary<Guid, List<GraphModel>> Load(string path)
+    private static Dictionary<Guid, List<GraphComponent>> Load(string path)
     {
         if (Content.LoadAsync<JsonAsset>(path)?.GetInstance<GraphAsset>() is not GraphAsset proceduralGraph)
         {
             return [];
         }
 
-        Dictionary<Guid, List<GraphModel>> nodes = [];
-        foreach (NodeModel GraphModel in proceduralGraph.Nodes)
+        Dictionary<Guid, List<GraphComponent>> nodes = [];
+        foreach (EntityComponent GraphModel in proceduralGraph.Nodes)
         {
-            ref List<GraphModel>? models = ref CollectionsMarshal.GetValueRefOrAddDefault(nodes, GraphModel.ActorID, out bool exists);
+            ref List<GraphComponent>? models = ref CollectionsMarshal.GetValueRefOrAddDefault(nodes, GraphModel.ActorID, out bool exists);
 
             if (exists)
             {
-                models!.Add(GraphModel.Model);
+                models!.Add(GraphModel.Component);
                 continue;
             }
 
-            models = [GraphModel.Model];
+            models = [GraphModel.Component];
         }
 
         return nodes;
     }
 
-    private static IEnumerable<NodeModel> GraphModels(IGraphNode node)
+    private static IEnumerable<EntityComponent> GraphModels(IGraphEntity node)
     {
         Guid actorId = node.Actor.ID;
-        foreach (GraphModel model in node.Models)
+        foreach (GraphComponent model in node.Components)
         {
-            yield return new NodeModel(actorId, model);
+            yield return new EntityComponent(actorId, model);
         }
     }
 

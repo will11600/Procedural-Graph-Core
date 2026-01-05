@@ -14,10 +14,10 @@ namespace ProceduralGraph.Interface;
 /// <summary>
 /// GraphModelEditor class.
 /// </summary>
-[CustomEditor(typeof(GraphModel))]
+[CustomEditor(typeof(GraphComponent))]
 internal sealed class GraphModelEditor : GenericEditor
 {
-    internal static ImmutableDictionary<string, Func<GraphModel>> Factories { get; }
+    internal static ImmutableDictionary<string, Func<GraphComponent>> Factories { get; }
 
     private ComboBox? _comboBox;
 
@@ -66,13 +66,13 @@ internal sealed class GraphModelEditor : GenericEditor
         }
     }
 
-    private static Func<GraphModel> MakeFactory(Type type)
+    private static Func<GraphComponent> MakeFactory(Type type)
     {
         var ctor = type.GetConstructor(Type.EmptyTypes) ?? throw new ArgumentException($"Type '{type.Name}' must have a public parameterless constructor.", nameof(type));
 
         var newExpression = Expression.New(ctor);
-        var castExpression = Expression.Convert(newExpression, typeof(GraphModel));
-        var lambda = Expression.Lambda<Func<GraphModel>>(castExpression);
+        var castExpression = Expression.Convert(newExpression, typeof(GraphComponent));
+        var lambda = Expression.Lambda<Func<GraphComponent>>(castExpression);
 
         return lambda.Compile();
     }
@@ -89,6 +89,6 @@ internal sealed class GraphModelEditor : GenericEditor
 
     private static bool IsAssignableToT(Type type)
     {
-        return !type.IsAbstract && type.IsAssignableTo(typeof(GraphModel));
+        return !type.IsAbstract && type.IsAssignableTo(typeof(GraphComponent));
     }
 }
